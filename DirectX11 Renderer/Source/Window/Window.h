@@ -1,8 +1,15 @@
 #pragma once
 
+#include "../Base Classes/Exceptions/BaseException.h"
+
 #include "../Generics/MinimalWindows.h"
 
+// INFO: Custom Window Class Macros for Window Positioning
 #define CW_USECENTRE ((int)0x80000001)
+
+// INFO: Custom Error Exception Macros for Window Class
+#define WINDOW_THROW_EXCEPTION(hr) Window::WindowException(__LINE__, __FILE__, hr)
+#define WINDOW_THROW_LAST_EXCEPTION() Window::WindowException(__LINE__, __FILE__, GetLastError())
 
 struct WindowInfo
 {
@@ -41,6 +48,22 @@ private:
 
 		WindowClass(const WindowClass&) = delete;
 		WindowClass& operator=(const WindowClass&) = delete;
+	};
+
+public:
+	class WindowException : public BaseException
+	{
+	private:
+		HRESULT hResult;
+
+	public:
+		inline WindowException(int _line, const char* _file, HRESULT _hResult) : BaseException(_line, _file), hResult(_hResult) {}
+		virtual const char* what() const override;
+		static std::string TranslateErrorCode(HRESULT hResult);
+
+		inline virtual const char* GetType() const override { return "Window Exception"; }
+		inline HRESULT GetErrorCode() const { return hResult; }
+		inline std::string GetErrorDescription() const { return TranslateErrorCode(hResult); }
 	};
 
 private:

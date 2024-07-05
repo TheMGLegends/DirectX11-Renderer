@@ -1,11 +1,15 @@
 #include "Window.h"
 
+#include <sstream>
 #include <string>
 
+#include "../../resource.h"
+
+#pragma region WindowClass
 Window::WindowClass Window::WindowClass::windowClass;
 const wchar_t* Window::WindowClass::windowClassName = L"DirectX11 Renderer";
 
-Window::WindowClass::WindowClass()
+Window::WindowClass::WindowClass() : hInstance(GetModuleHandle(nullptr))
 {
 	WNDCLASSEX wc = { 0 };
 
@@ -16,20 +20,53 @@ Window::WindowClass::WindowClass()
 	wc.cbClsExtra = 0;
 	wc.cbWndExtra = 0;
 	wc.hInstance = GetInstance();
-	wc.hIcon = nullptr;
+	wc.hIcon = static_cast<HICON>(LoadImage(GetInstance(), MAKEINTRESOURCE(IDI_ICON1), IMAGE_ICON, 256, 256, 0));
 	wc.hCursor = nullptr;
 	wc.hbrBackground = nullptr;
 	wc.lpszMenuName = nullptr;
 	wc.lpszClassName = GetWindowClassName();
-	wc.hIconSm = nullptr;
+	wc.hIconSm = static_cast<HICON>(LoadImage(GetInstance(), MAKEINTRESOURCE(IDI_ICON1), IMAGE_ICON, 16, 16, 0));
 
 	RegisterClassEx(&wc);
 }
 
 Window::WindowClass::~WindowClass()
 {
+	UnregisterClass(GetWindowClassName(), GetInstance());
 }
+#pragma endregion
 
+#pragma region WindowException
+const char* Window::WindowException::what() const
+{
+	std::ostringstream oss;
+	oss << GetType() << std::endl << "Error Code: " << hResult << std::endl << "Description: " << GetErrorDescription() << std::endl << GetOriginContext();
+	whatBuffer = oss.str();
+	return whatBuffer.c_str();
+}
+std::string Window::WindowException::TranslateErrorCode(HRESULT hResult)
+{
+	char* pMessageBuffer = nullptr;
+
+	// INFO: Get the Error Message from Windows and Free the Allocated Memory when Done
+	DWORD nMessageLength = FormatMessageA(
+		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+		nullptr, hResult, 0, reinterpret_cast<LPSTR>(&pMessageBuffer), 0, nullptr
+	);
+
+	if (nMessageLength == 0)
+		return "Unidentified Error Code";
+
+	// INFO: Copy the Error Message so the Windows Allocated Memory can be Released
+	std::string errorDescription = pMessageBuffer;
+
+	LocalFree(pMessageBuffer);
+
+	return errorDescription;
+}
+#pragma endregion
+
+#pragma region Window
 Window::Window(const wchar_t* windowName, WindowInfo _windowInfo)
 {
 	windowInfo = _windowInfo;
@@ -39,7 +76,9 @@ Window::Window(const wchar_t* windowName, WindowInfo _windowInfo)
 	rect.right = windowInfo.width + rect.left;
 	rect.bottom = windowInfo.height + rect.top;
 
-	AdjustWindowRect(&rect, WS_CAPTION | WS_MAXIMIZEBOX | WS_MINIMIZEBOX | WS_SYSMENU | WS_SIZEBOX, FALSE);
+	// INFO: Error Checking for Window Size Adjustment
+	if (!AdjustWindowRect(&rect, WS_CAPTION | WS_MAXIMIZEBOX | WS_MINIMIZEBOX | WS_SYSMENU | WS_SIZEBOX, FALSE))
+		throw WINDOW_THROW_LAST_EXCEPTION();
 
 	// INFO: Centre Window if Required
 	if (windowInfo.x == CW_USECENTRE || windowInfo.y == CW_USECENTRE)
@@ -61,6 +100,10 @@ Window::Window(const wchar_t* windowName, WindowInfo _windowInfo)
 		windowInfo.x, windowInfo.y, windowInfo.width, windowInfo.height,
 		nullptr, nullptr, WindowClass::GetInstance(), this
 	);
+
+	// INFO: Error Checking for Window Creation
+	if (hWnd == nullptr)
+		throw WINDOW_THROW_LAST_EXCEPTION();
 
 	// INFO: Show the Window
 	ShowWindow(hWnd, SW_SHOWDEFAULT);
@@ -165,3 +208,4 @@ LRESULT Window::HandleMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 	return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
+#pragma endregion
