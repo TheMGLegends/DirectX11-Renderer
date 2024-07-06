@@ -145,16 +145,17 @@
     <ClCompile Include="Source\Window\Window.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="resource.h" />
+    <ClInclude Include="Resources\resource.h" />
     <ClInclude Include="Source\Base Classes\Exceptions\BaseException.h" />
     <ClInclude Include="Source\Generics\MinimalWindows.h" />
     <ClInclude Include="Source\Window\Window.h" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="DirectX11 Renderer.rc" />
+    <ResourceCompile Include="Resources\DirectX11 Renderer.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="AppIcon.ico" />
+    <Image Include="Resources\AppCursor.ico" />
+    <Image Include="Resources\AppIcon.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
