@@ -1,28 +1,16 @@
 #pragma once
 
 #include "../Base Classes/Exceptions/BaseException.h"
+#include "../Keyboard/Keyboard.h"
 
 #include "../Generics/MinimalWindows.h"
 
 // INFO: Custom Window Class Macros for Window Positioning
-#define CW_USECENTRE ((int)0x80000001)
+constexpr auto CW_USECENTRE = ((int)0x80000001);
 
 // INFO: Custom Error Exception Macros for Window Class
-#define WINDOW_THROW_EXCEPTION(hr) Window::WindowException(__LINE__, __FILE__, hr)
-#define WINDOW_THROW_LAST_EXCEPTION() Window::WindowException(__LINE__, __FILE__, GetLastError())
-
-struct WindowInfo
-{
-	int width;
-	int height;
-	int x;
-	int y;
-
-	WindowInfo() : width(800), height(600), x(CW_USECENTRE), y(CW_USECENTRE) {}
-
-	WindowInfo(int _width, int _height, int _x = CW_USECENTRE, int _y = CW_USECENTRE)
-		: width(_width), height(_height), x(_x), y(_y) {}
-};
+#define WINDOW_THROW_EXCEPTION(hr) Window::Exception(__LINE__, __FILE__, hr)
+#define WINDOW_THROW_LAST_EXCEPTION() Window::Exception(__LINE__, __FILE__, GetLastError())
 
 class Window
 {
@@ -51,13 +39,28 @@ private:
 	};
 
 public:
-	class WindowException : public BaseException
+	// INFO: Window Information Structure for Window Creation
+	struct Info
+	{
+		int width;
+		int height;
+		int x;
+		int y;
+
+		Info() : width(800), height(600), x(CW_USECENTRE), y(CW_USECENTRE) {}
+
+		Info(int _width, int _height, int _x = CW_USECENTRE, int _y = CW_USECENTRE)
+			: width(_width), height(_height), x(_x), y(_y) {}
+	};
+
+	// INFO: Custom Window Exception Class for Error Handling
+	class Exception : public BaseException
 	{
 	private:
 		HRESULT hResult;
 
 	public:
-		inline WindowException(int _line, const char* _file, HRESULT _hResult) : BaseException(_line, _file), hResult(_hResult) {}
+		inline Exception(int _line, const char* _file, HRESULT _hResult) : BaseException(_line, _file), hResult(_hResult) {}
 		virtual const char* what() const override;
 		static std::string TranslateErrorCode(HRESULT hResult);
 
@@ -67,15 +70,19 @@ public:
 	};
 
 private:
-	WindowInfo windowInfo;
+	Info windowInfo;
 	HWND hWnd;
 
 public:
-	Window(const wchar_t* windowName, WindowInfo _windowInfo);
+	Keyboard keyboard;
+
+public:
+	Window(const wchar_t* windowName, Info _windowInfo);
 	Window(const wchar_t* windowName, int width, int height, int x = CW_USECENTRE, int y = CW_USECENTRE);
 	~Window();
 
 	void CentreWindow();
+	void SetupConsole();
 
 private:
 	/// @brief Handles the Setup of Message Handling for the Window

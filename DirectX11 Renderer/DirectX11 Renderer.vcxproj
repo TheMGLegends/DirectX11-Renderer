@@ -137,6 +137,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Source\Keyboard\Keyboard.cpp" />
     <ClCompile Include="Source\Base Classes\Exceptions\BaseException.cpp" />
     <ClCompile Include="Source\WinMain.cpp">
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">stdcpp20</LanguageStandard>
@@ -145,6 +146,7 @@
     <ClCompile Include="Source\Window\Window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Source\Keyboard\Keyboard.h" />
     <ClInclude Include="Resources\resource.h" />
     <ClInclude Include="Source\Base Classes\Exceptions\BaseException.h" />
     <ClInclude Include="Source\Generics\MinimalWindows.h" />

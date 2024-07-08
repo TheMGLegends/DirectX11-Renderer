@@ -2,6 +2,7 @@
 
 #include <sstream>
 #include <string>
+#include <iostream>
 
 #include "../../Resources/resource.h"
 
@@ -37,14 +38,14 @@ Window::WindowClass::~WindowClass()
 #pragma endregion
 
 #pragma region WindowException
-const char* Window::WindowException::what() const
+const char* Window::Exception::what() const
 {
 	std::ostringstream oss;
 	oss << GetType() << std::endl << "Error Code: " << hResult << std::endl << "Description: " << GetErrorDescription() << std::endl << GetOriginContext();
 	whatBuffer = oss.str();
 	return whatBuffer.c_str();
 }
-std::string Window::WindowException::TranslateErrorCode(HRESULT hResult)
+std::string Window::Exception::TranslateErrorCode(HRESULT hResult)
 {
 	char* pMessageBuffer = nullptr;
 
@@ -67,7 +68,7 @@ std::string Window::WindowException::TranslateErrorCode(HRESULT hResult)
 #pragma endregion
 
 #pragma region Window
-Window::Window(const wchar_t* windowName, WindowInfo _windowInfo)
+Window::Window(const wchar_t* windowName, Info _windowInfo)
 {
 	windowInfo = _windowInfo;
 
@@ -109,7 +110,7 @@ Window::Window(const wchar_t* windowName, WindowInfo _windowInfo)
 	ShowWindow(hWnd, SW_SHOWDEFAULT);
 }
 
-Window::Window(const wchar_t* windowName, int width, int height, int x, int y) : Window(windowName, WindowInfo(width, height, x, y)) { }
+Window::Window(const wchar_t* windowName, int width, int height, int x, int y) : Window(windowName, Info(width, height, x, y)) { }
 
 Window::~Window()
 {
@@ -125,6 +126,15 @@ void Window::CentreWindow()
 	windowInfo.y = (screenHeight - windowInfo.height) / 2;
 
 	SetWindowPos(hWnd, nullptr, windowInfo.x, windowInfo.y, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+}
+
+void Window::SetupConsole()
+{
+	AllocConsole();
+	FILE* fp;
+	freopen_s(&fp, "CONOUT$", "w", stdout); // Redirect stdout to console
+	std::cout.clear(); // Clear error state
+	std::cout.sync_with_stdio(); // Synchronize with C I/O
 }
 
 LRESULT Window::HandleMessageSetup(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -166,8 +176,14 @@ LRESULT Window::HandleMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		PostQuitMessage(0);
 		return 0;
 
+	case WM_KILLFOCUS:
+		keyboard.ClearKeyStates();
+		break;
+
 	// INFO: Used for Key Presses (Player Movement with WASD etc.)
 	case WM_KEYDOWN:
+	case WM_SYSKEYDOWN:
+		/*
 		switch (wParam)
 		{
 		case VK_ESCAPE:
@@ -176,36 +192,50 @@ LRESULT Window::HandleMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		default:
 			break;
 		}
+		*/
+		// INFO: If the Previous Key State is False
+		if (!(lParam & 0x40000000) || keyboard.IsAutoRepeatEnabled())
+			keyboard.OnKeyPressed(static_cast<unsigned char>(wParam));
+		// INFO: If the Previous Key State is True
+		else if ((lParam & 0x40000000) && !keyboard.IsAutoRepeatEnabled())
+			keyboard.OnKeyHeld(static_cast<unsigned char>(wParam));
 		break;
+
 	case WM_KEYUP:
+	case WM_SYSKEYUP:
+		// INFO: If the Previous Key State is True
+		if ((lParam & 0x40000000))
+			keyboard.OnKeyReleased(static_cast<unsigned char>(wParam));
 		break;
 
 	// INFO: Used for Character Input (Writing into a Text Box etc.)
 	case WM_CHAR:
-	{
+		/*
 		static std::string text;
 
 		if (wParam == VK_BACK && !text.empty())
 			text.pop_back();
-		else
+		else if (wParam != VK_BACK)
 			text.push_back((char)wParam);
 
 		SetWindowText(hWnd, std::wstring(text.begin(), text.end()).c_str());
-	}
-	break;
+		*/
+		keyboard.OnChar(static_cast<unsigned char>(wParam));
+		break;
 
 	// INFO: Used for Mouse Clicks (Selecting an Object etc.)
 	case WM_LBUTTONDOWN:
-	{
+		/*
 		POINTS pt = MAKEPOINTS(lParam);
 		std::string text = "X: " + std::to_string(pt.x) + " Y: " + std::to_string(pt.y);
 		SetWindowText(hWnd, std::wstring(text.begin(), text.end()).c_str());
-	}
-	break;
-	default:
+		*/
 		break;
+
+	default:
+		return DefWindowProc(hWnd, uMsg, wParam, lParam);
 	}
 
-	return DefWindowProc(hWnd, uMsg, wParam, lParam);
+	return 0;
 }
 #pragma endregion

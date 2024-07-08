@@ -1,14 +1,19 @@
 #include "Window/Window.h"
 
+#include <iostream>
+
 int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nCmdShow)
 {
 	try
 	{
 		// INFO: Set the Window Info (Centred by Default)
-		WindowInfo windowInfo(800, 600);
+		Window::Info windowInfo{ 800, 600 };
 
 		// INFO: Create the Window
 		Window window(L"DirectX11 Renderer", windowInfo);
+
+		// INFO: Setup Console for Debugging
+		window.SetupConsole();
 
 		MSG msg;
 		BOOL result;
@@ -18,6 +23,15 @@ int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 		{
 			TranslateMessage(&msg); // INFO: Provides Translation for WM_CHAR Messages (One of the Jobs)
 			DispatchMessage(&msg);
+
+			if (window.keyboard.GetKeyHeld(0x41))
+				std::cout << "A Held\n";
+
+			if (window.keyboard.GetKeyPressed(0x41))
+				std::cout << "A Pressed\n";
+
+			if (window.keyboard.GetKeyReleased(0x41))
+				std::cout << "A Released\n";
 		}
 
 		// INFO: Error Checking for GetMessage
