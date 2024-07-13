@@ -26,6 +26,7 @@ public:
 		unsigned char code;
 
 	public:
+		/// @brief Default Constructor - Initializes the Event to Invalid State
 		inline Event() : type(Type::Invalid), code(0u) {}
 		inline Event(Type _type, unsigned char _code) : type(_type), code(_code) {}
 
@@ -40,8 +41,6 @@ public:
 private:
 	static constexpr unsigned int keyLength = 256u;
 	static constexpr unsigned int bufferSize = 16u;
-
-	bool autoRepeatEnabled = false;
 
 	std::bitset<keyLength> currentKeyStates;
 	std::bitset<keyLength> previousKeyStates;
@@ -64,23 +63,18 @@ public:
 	Keyboard() = default;
 
 	// INFO: Key Event Handling
-	bool GetKeyPressed(unsigned char keyCode);
+	inline bool GetKeyPressed(unsigned char keyCode) const { return currentKeyStates[keyCode] && !previousKeyStates[keyCode]; }
 	inline bool GetKeyHeld(unsigned char keyCode) const { return currentKeyStates[keyCode] && previousKeyStates[keyCode]; }
 	bool GetKeyReleased(unsigned char keyCode);
 
-	std::optional<Event> ReadKey();
+	Event ReadKey();
 	inline bool KeyBufferIsEmpty() const { return keyBuffer.empty(); }
 	inline void ClearKeyBuffer() { keyBuffer = std::queue<Event>(); }
 
 	// INFO: Character Event Handling
-	std::optional<char> ReadCharacter();
+	char ReadCharacter();
 	inline bool CharacterBufferIsEmpty() const { return characterBuffer.empty(); }
 	inline void ClearCharacterBuffer() { characterBuffer = std::queue<char>(); }
 
 	inline void ClearBuffers() { ClearKeyBuffer(); ClearCharacterBuffer(); }
-
-	// INFO: Auto Repeat Control
-	inline void EnableAutoRepeat() { autoRepeatEnabled = true; }
-	inline void DisableAutoRepeat() { autoRepeatEnabled = false; }
-	inline bool IsAutoRepeatEnabled() const { return autoRepeatEnabled; }
 };

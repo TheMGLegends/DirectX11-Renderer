@@ -2,6 +2,7 @@
 
 #include "../Base Classes/Exceptions/BaseException.h"
 #include "../Keyboard/Keyboard.h"
+#include "../Mouse/Mouse.h"
 
 #include "../Generics/MinimalWindows.h"
 
@@ -75,6 +76,7 @@ private:
 
 public:
 	Keyboard keyboard;
+	Mouse mouse;
 
 public:
 	Window(const wchar_t* windowName, Info _windowInfo);
@@ -83,6 +85,7 @@ public:
 
 	void CentreWindow();
 	void SetupConsole();
+	void SetTitle(const std::string& title) const;
 
 private:
 	/// @brief Handles the Setup of Message Handling for the Window

@@ -78,7 +78,7 @@ Window::Window(const wchar_t* windowName, Info _windowInfo)
 	rect.bottom = windowInfo.height + rect.top;
 
 	// INFO: Error Checking for Window Size Adjustment
-	if (!AdjustWindowRect(&rect, WS_CAPTION | WS_MAXIMIZEBOX | WS_MINIMIZEBOX | WS_SYSMENU | WS_SIZEBOX, FALSE))
+	if (AdjustWindowRect(&rect, WS_CAPTION | WS_MAXIMIZEBOX | WS_MINIMIZEBOX | WS_SYSMENU | WS_SIZEBOX, FALSE) == 0)
 		throw WINDOW_THROW_LAST_EXCEPTION();
 
 	// INFO: Centre Window if Required
@@ -137,6 +137,12 @@ void Window::SetupConsole()
 	std::cout.sync_with_stdio(); // Synchronize with C I/O
 }
 
+void Window::SetTitle(const std::string& title) const
+{
+	if (SetWindowText(hWnd, std::wstring(title.begin(), title.end()).c_str()) == 0)
+		throw WINDOW_THROW_LAST_EXCEPTION();
+}
+
 LRESULT Window::HandleMessageSetup(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	if (uMsg == WM_NCCREATE)
@@ -173,64 +179,142 @@ LRESULT Window::HandleMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 	switch (uMsg)
 	{
 	case WM_CLOSE:
+	{
 		PostQuitMessage(0);
 		return 0;
+	}
 
 	case WM_KILLFOCUS:
+	{
 		keyboard.ClearKeyStates();
 		break;
+	}
 
-	// INFO: Used for Key Presses (Player Movement with WASD etc.)
+#pragma region KEYBOARD MESSAGES
 	case WM_KEYDOWN:
 	case WM_SYSKEYDOWN:
-		/*
-		switch (wParam)
-		{
-		case VK_ESCAPE:
-			PostQuitMessage(0);
-			return 0;
-		default:
-			break;
-		}
-		*/
+	{
 		// INFO: If the Previous Key State is False
-		if (!(lParam & 0x40000000) || keyboard.IsAutoRepeatEnabled())
+		if (!(lParam & 0x40000000))
 			keyboard.OnKeyPressed(static_cast<unsigned char>(wParam));
 		// INFO: If the Previous Key State is True
-		else if ((lParam & 0x40000000) && !keyboard.IsAutoRepeatEnabled())
+		else if ((lParam & 0x40000000))
 			keyboard.OnKeyHeld(static_cast<unsigned char>(wParam));
 		break;
+	}
 
 	case WM_KEYUP:
 	case WM_SYSKEYUP:
+	{
 		// INFO: If the Previous Key State is True
 		if ((lParam & 0x40000000))
 			keyboard.OnKeyReleased(static_cast<unsigned char>(wParam));
 		break;
+	}
 
-	// INFO: Used for Character Input (Writing into a Text Box etc.)
 	case WM_CHAR:
-		/*
-		static std::string text;
-
-		if (wParam == VK_BACK && !text.empty())
-			text.pop_back();
-		else if (wParam != VK_BACK)
-			text.push_back((char)wParam);
-
-		SetWindowText(hWnd, std::wstring(text.begin(), text.end()).c_str());
-		*/
+	{
 		keyboard.OnChar(static_cast<unsigned char>(wParam));
 		break;
+	}
+#pragma endregion
 
-	// INFO: Used for Mouse Clicks (Selecting an Object etc.)
-	case WM_LBUTTONDOWN:
-		/*
-		POINTS pt = MAKEPOINTS(lParam);
-		std::string text = "X: " + std::to_string(pt.x) + " Y: " + std::to_string(pt.y);
-		SetWindowText(hWnd, std::wstring(text.begin(), text.end()).c_str());
-		*/
+#pragma region MOUSE MESSAGES
+	case WM_MOUSEMOVE:
+	{
+		const POINTS point = MAKEPOINTS(lParam);
+		// INFO: If in client window log move, and log enter + capture mouse (if not previously in window)
+		if (point.x >= 0 && point.x < windowInfo.width && point.y >= 0 && point.y < windowInfo.height)
+		{
+			mouse.OnMouseMove(point.x, point.y);
+
+			if (!mouse.IsInWindow())
+			{
+				SetCapture(hWnd);
+				mouse.OnMouseEnter();
+			}
+		}
+		// INFO: If not in client window but button is down log move
+		else
+		{
+			if (wParam & (MK_LBUTTON | MK_RBUTTON))
+			{
+				mouse.OnMouseMove(point.x, point.y);
+			}
+			// INFO: If button up, release capture / log event for leaving
+			else
+			{
+				ReleaseCapture();
+				mouse.OnMouseLeave();
+			}
+		}
 		break;
+	}
+	case WM_LBUTTONDOWN:
+	{
+		const POINTS point = MAKEPOINTS(lParam);
+		mouse.OnLeftPressed(point.x, point.y);
+		break;
+	}
+	case WM_MBUTTONDOWN:
+	{
+		const POINTS point = MAKEPOINTS(lParam);
+		mouse.OnMiddlePressed(point.x, point.y);
+		break;
+	}
+	case WM_RBUTTONDOWN:
+	{
+		const POINTS point = MAKEPOINTS(lParam);
+		mouse.OnRightPressed(point.x, point.y);
+		break;
+	}
+	case WM_LBUTTONUP:
+	{
+		const POINTS point = MAKEPOINTS(lParam);
+		mouse.OnLeftReleased(point.x, point.y);
+
+		// INFO: Release mouse if outside of window
+		if (point.x < 0 || point.x >= windowInfo.width || point.y < 0 || point.y >= windowInfo.height)
+		{
+			ReleaseCapture();
+			mouse.OnMouseLeave();
+		}
+		break;
+	}
+	case WM_MBUTTONUP:
+	{
+		const POINTS point = MAKEPOINTS(lParam);
+		mouse.OnMiddleReleased(point.x, point.y);
+
+		// INFO: Release mouse if outside of window
+		if (point.x < 0 || point.x >= windowInfo.width || point.y < 0 || point.y >= windowInfo.height)
+		{
+			ReleaseCapture();
+			mouse.OnMouseLeave();
+		}
+		break;
+	}
+	case WM_RBUTTONUP:
+	{
+		const POINTS point = MAKEPOINTS(lParam);
+		mouse.OnRightReleased(point.x, point.y);
+
+		// INFO: Release mouse if outside of window
+		if (point.x < 0 || point.x >= windowInfo.width || point.y < 0 || point.y >= windowInfo.height)
+		{
+			ReleaseCapture();
+			mouse.OnMouseLeave();
+		}
+		break;
+	}
+	case WM_MOUSEWHEEL:
+	{
+		const POINTS pt = MAKEPOINTS(lParam);
+		const int delta = GET_WHEEL_DELTA_WPARAM(wParam);
+		mouse.OnWheelDelta(pt.x, pt.y, delta);
+		break;
+	}
+#pragma endregion
 
 	default:
 		return DefWindowProc(hWnd, uMsg, wParam, lParam);

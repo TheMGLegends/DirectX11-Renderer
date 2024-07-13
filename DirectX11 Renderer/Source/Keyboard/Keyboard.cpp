@@ -62,17 +62,6 @@ void Keyboard::TrimBuffer(std::queue<T>& buffer)
 		buffer.pop();
 }
 
-bool Keyboard::GetKeyPressed(unsigned char keyCode)
-{
-	if (currentKeyStates[keyCode] && !previousKeyStates[keyCode])
-	{
-		previousKeyStates[keyCode] = currentKeyStates[keyCode];
-		return true;
-	}
-	else
-		return false;
-}
-
 bool Keyboard::GetKeyReleased(unsigned char keyCode)
 {
 	if (!currentKeyStates[keyCode] && previousKeyStates[keyCode])
@@ -84,19 +73,19 @@ bool Keyboard::GetKeyReleased(unsigned char keyCode)
 		return false;
 }
 
-std::optional<Keyboard::Event> Keyboard::ReadKey()
+Keyboard::Event Keyboard::ReadKey()
 {
 	if (!KeyBufferIsEmpty())
 	{
-		Keyboard::Event event = keyBuffer.front();
+		Event event = keyBuffer.front();
 		keyBuffer.pop();
 		return event;
 	}
 	else
-		return std::nullopt;
+		return Event();
 }
 
-std::optional<char> Keyboard::ReadCharacter()
+char Keyboard::ReadCharacter()
 {
 	if (!CharacterBufferIsEmpty())
 	{
@@ -105,5 +94,5 @@ std::optional<char> Keyboard::ReadCharacter()
 		return character;
 	}
 	else
-		return std::nullopt;
+		return 0;
 }

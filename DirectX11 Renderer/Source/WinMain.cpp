@@ -1,6 +1,7 @@
 #include "Window/Window.h"
 
 #include <iostream>
+#include <sstream>
 
 int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nCmdShow)
 {
@@ -24,14 +25,17 @@ int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 			TranslateMessage(&msg); // INFO: Provides Translation for WM_CHAR Messages (One of the Jobs)
 			DispatchMessage(&msg);
 
-			if (window.keyboard.GetKeyHeld(0x41))
-				std::cout << "A Held\n";
-
-			if (window.keyboard.GetKeyPressed(0x41))
-				std::cout << "A Pressed\n";
-
-			if (window.keyboard.GetKeyReleased(0x41))
-				std::cout << "A Released\n";
+			// LIL TESTING
+			while (!window.mouse.MouseBufferIsEmpty())
+			{
+				const Mouse::Event event = window.mouse.ReadMouse();
+				if (event.GetType() == Mouse::Event::Type::Move)
+				{
+					std::ostringstream oss;
+					oss << "Mouse Position: " << event.GetXPosition() << ", " << event.GetYPosition() << std::endl;
+					window.SetTitle(oss.str());
+				}
+			}
 		}
 
 		// INFO: Error Checking for GetMessage
