@@ -143,6 +143,23 @@ void Window::SetTitle(const std::string& title) const
 		throw WINDOW_THROW_LAST_EXCEPTION();
 }
 
+std::optional<int> Window::ProcessMessages()
+{
+	MSG msg;
+
+	// INFO: Peek Message doesn't block loop from executing
+	while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+	{
+		if (msg.message == WM_QUIT)
+			return static_cast<int>(msg.wParam);
+
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
+
+	return {};
+}
+
 LRESULT Window::HandleMessageSetup(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	if (uMsg == WM_NCCREATE)

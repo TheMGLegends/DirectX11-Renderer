@@ -6,6 +6,8 @@
 
 #include "../Generics/MinimalWindows.h"
 
+#include <optional>
+
 // INFO: Custom Window Class Macros for Window Positioning
 constexpr auto CW_USECENTRE = ((int)0x80000001);
 
@@ -86,6 +88,8 @@ public:
 	void CentreWindow();
 	void SetupConsole();
 	void SetTitle(const std::string& title) const;
+
+	static std::optional<int> ProcessMessages();
 
 private:
 	/// @brief Handles the Setup of Message Handling for the Window

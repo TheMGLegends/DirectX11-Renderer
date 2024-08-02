@@ -137,6 +137,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Source\Application\App.cpp" />
     <ClCompile Include="Source\Mouse\Mouse.cpp" />
     <ClCompile Include="Source\Keyboard\Keyboard.cpp" />
     <ClCompile Include="Source\Base Classes\Exceptions\BaseException.cpp" />
@@ -145,14 +146,17 @@
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|x64'">stdcpp20</LanguageStandard>
     </ClCompile>
     <ClCompile Include="Source\Window\Window.cpp" />
+    <ClCompile Include="Source\Time\TimeHandler.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Source\Application\App.h" />
     <ClInclude Include="Source\Mouse\Mouse.h" />
     <ClInclude Include="Source\Keyboard\Keyboard.h" />
     <ClInclude Include="Resources\resource.h" />
     <ClInclude Include="Source\Base Classes\Exceptions\BaseException.h" />
     <ClInclude Include="Source\Generics\MinimalWindows.h" />
     <ClInclude Include="Source\Window\Window.h" />
+    <ClInclude Include="Source\Time\TimeHandler.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resources\DirectX11 Renderer.rc" />

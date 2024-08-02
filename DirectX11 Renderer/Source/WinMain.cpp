@@ -1,4 +1,4 @@
-#include "Window/Window.h"
+#include "Application/App.h"
 
 #include <iostream>
 #include <sstream>
@@ -7,42 +7,10 @@ int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 {
 	try
 	{
-		// INFO: Set the Window Info (Centred by Default)
-		Window::Info windowInfo{ 800, 600 };
+		// INFO: Set up Application
+		App app(L"DirectX11 Renderer", 800, 600);
 
-		// INFO: Create the Window
-		Window window(L"DirectX11 Renderer", windowInfo);
-
-		// INFO: Setup Console for Debugging
-		window.SetupConsole();
-
-		MSG msg;
-		BOOL result;
-
-		// INFO: Pump Message Events
-		while (result = (GetMessage(&msg, nullptr, 0, 0)) > 0)
-		{
-			TranslateMessage(&msg); // INFO: Provides Translation for WM_CHAR Messages (One of the Jobs)
-			DispatchMessage(&msg);
-
-			// LIL TESTING
-			while (!window.mouse.MouseBufferIsEmpty())
-			{
-				const Mouse::Event event = window.mouse.ReadMouse();
-				if (event.GetType() == Mouse::Event::Type::Move)
-				{
-					std::ostringstream oss;
-					oss << "Mouse Position: " << event.GetXPosition() << ", " << event.GetYPosition() << std::endl;
-					window.SetTitle(oss.str());
-				}
-			}
-		}
-
-		// INFO: Error Checking for GetMessage
-		if (result == -1)
-			throw WINDOW_THROW_LAST_EXCEPTION();
-
-		return static_cast<int>(msg.wParam);
+		return app.SystemUpdate();
 	}
 	catch (const BaseException& exception)
 	{
