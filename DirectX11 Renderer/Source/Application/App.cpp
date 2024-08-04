@@ -22,4 +22,8 @@ int App::SystemUpdate()
 
 void App::CustomUpdate()
 {
+	const float s = sin(TimeHandler::GetElapsedTime()) / 2.0f + 0.5f;
+	const float c = cos(TimeHandler::GetElapsedTime()) / 2.0f + 0.5f;
+	window.GetRenderer().ClearBuffer(s, c, 1.0f);
+	window.GetRenderer().EndFrame();
 }

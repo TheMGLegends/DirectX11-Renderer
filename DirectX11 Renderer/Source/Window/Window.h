@@ -3,10 +3,12 @@
 #include "../Base Classes/Exceptions/BaseException.h"
 #include "../Keyboard/Keyboard.h"
 #include "../Mouse/Mouse.h"
+#include "../Graphics/Renderer.h"
 
 #include "../Generics/MinimalWindows.h"
 
 #include <optional>
+#include <memory>
 
 // INFO: Custom Window Class Macros for Window Positioning
 constexpr auto CW_USECENTRE = ((int)0x80000001);
@@ -75,6 +77,7 @@ public:
 private:
 	Info windowInfo;
 	HWND hWnd;
+	std::unique_ptr<Renderer> renderer;
 
 public:
 	Keyboard keyboard;
@@ -90,6 +93,8 @@ public:
 	void SetTitle(const std::string& title) const;
 
 	static std::optional<int> ProcessMessages();
+
+	inline Renderer& GetRenderer() { return *renderer; }
 
 private:
 	/// @brief Handles the Setup of Message Handling for the Window

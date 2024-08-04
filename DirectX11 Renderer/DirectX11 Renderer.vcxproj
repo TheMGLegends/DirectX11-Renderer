@@ -137,6 +137,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Source\Graphics\Renderer.cpp" />
     <ClCompile Include="Source\Application\App.cpp" />
     <ClCompile Include="Source\Mouse\Mouse.cpp" />
     <ClCompile Include="Source\Keyboard\Keyboard.cpp" />
@@ -149,6 +150,7 @@
     <ClCompile Include="Source\Time\TimeHandler.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Source\Graphics\Renderer.h" />
     <ClInclude Include="Source\Application\App.h" />
     <ClInclude Include="Source\Mouse\Mouse.h" />
     <ClInclude Include="Source\Keyboard\Keyboard.h" />

@@ -108,6 +108,9 @@ Window::Window(const wchar_t* windowName, Info _windowInfo)
 
 	// INFO: Show the Window
 	ShowWindow(hWnd, SW_SHOWDEFAULT);
+
+	// INFO: Create the Graphics Renderer
+	renderer = std::make_unique<Renderer>(hWnd);
 }
 
 Window::Window(const wchar_t* windowName, int width, int height, int x, int y) : Window(windowName, Info(width, height, x, y)) { }
