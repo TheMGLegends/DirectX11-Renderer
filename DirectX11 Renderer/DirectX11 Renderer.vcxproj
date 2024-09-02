@@ -137,6 +137,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Source\DXGI\DxgiInfoManager.cpp" />
     <ClCompile Include="Source\Graphics\Renderer.cpp" />
     <ClCompile Include="Source\Application\App.cpp" />
     <ClCompile Include="Source\Mouse\Mouse.cpp" />
@@ -150,6 +151,7 @@
     <ClCompile Include="Source\Time\TimeHandler.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Source\DXGI\DxgiInfoManager.h" />
     <ClInclude Include="Source\Graphics\Renderer.h" />
     <ClInclude Include="Source\Application\App.h" />
     <ClInclude Include="Source\Mouse\Mouse.h" />
