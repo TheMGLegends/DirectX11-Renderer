@@ -65,6 +65,45 @@ std::string Window::Exception::TranslateErrorCode(HRESULT hResult)
 
 	return errorDescription;
 }
+
+Window::HrException::HrException(int line, const char* file, HRESULT hr) noexcept
+	:
+	Exception(line, file),
+	hr(hr)
+{}
+
+const char* Window::HrException::what() const noexcept
+{
+	std::ostringstream oss;
+	oss << GetType() << std::endl
+		<< "[Error Code] 0x" << std::hex << std::uppercase << GetErrorCode()
+		<< std::dec << " (" << (unsigned long)GetErrorCode() << ")" << std::endl
+		<< "[Description] " << GetErrorDescription() << std::endl
+		<< GetOriginContext();
+	whatBuffer = oss.str();
+	return whatBuffer.c_str();
+}
+
+const char* Window::HrException::GetType() const noexcept
+{
+	return "Window Exception";
+}
+
+HRESULT Window::HrException::GetErrorCode() const noexcept
+{
+	return hr;
+}
+
+std::string Window::HrException::GetErrorDescription() const noexcept
+{
+	return Exception::TranslateErrorCode(hr);
+}
+
+
+const char* Window::NoGfxException::GetType() const noexcept
+{
+	return "Window Exception [No Graphics]";
+}
 #pragma endregion
 
 #pragma region Window
@@ -161,6 +200,15 @@ std::optional<int> Window::ProcessMessages()
 	}
 
 	return {};
+}
+
+Renderer& Window::GetRenderer()
+{
+	if (!renderer)
+	{
+		throw WINDOW_NOGFX_EXCEPT();
+	}
+	return *renderer;
 }
 
 LRESULT Window::HandleMessageSetup(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)

@@ -32,7 +32,7 @@ DxgiInfoManager::DxgiInfoManager()
 	}
 
 	HRESULT hr;
-	GFX_THROW_NOINFO(DxgiGetDebugInterface(__uuidof(IDXGIInfoQueue), reinterpret_cast<void**>(&pDxgiInfoQueue)));
+	GFX_THROW_NOINFO(DxgiGetDebugInterface(__uuidof(IDXGIInfoQueue), reinterpret_cast<void**>(&dxgiInfoQueue)));
 }
 
 DxgiInfoManager::~DxgiInfoManager()
@@ -54,17 +54,18 @@ std::vector<std::string> DxgiInfoManager::GetMessages() const
 
 	for (auto i = next; i < end; i++)
 	{
+		HRESULT hr;
 		SIZE_T messageLength;
 
 		// INFO: Get Message Size in Bytes
-		GFX_THROW_NO_INFO(dxgiInfoQueue->GetMessage(DXGI_DEBUG_ALL, i, nullptr, &messageLength));
+		GFX_THROW_NOINFO(dxgiInfoQueue->GetMessage(DXGI_DEBUG_ALL, i, nullptr, &messageLength));
 
 		// INFO: Allocate Memory for Message
 		auto bytes = std::make_unique<byte[]>(messageLength);
 		auto message = reinterpret_cast<DXGI_INFO_QUEUE_MESSAGE*>(bytes.get());
 
 		// INFO: Get the Message and Push it to the Vector
-		GFX_THROW_NO_INFO(dxgiInfoQueue->GetMessage(DXGI_DEBUG_ALL, i, message, &messageLength));
+		GFX_THROW_NOINFO(dxgiInfoQueue->GetMessage(DXGI_DEBUG_ALL, i, message, &messageLength));
 
 		messages.emplace_back(message->pDescription);
 	}

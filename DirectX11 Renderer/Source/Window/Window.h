@@ -16,6 +16,7 @@ constexpr auto CW_USECENTRE = ((int)0x80000001);
 // INFO: Custom Error Exception Macros for Window Class
 #define WINDOW_THROW_EXCEPTION(hr) Window::Exception(__LINE__, __FILE__, hr)
 #define WINDOW_THROW_LAST_EXCEPTION() Window::Exception(__LINE__, __FILE__, GetLastError())
+#define WINDOW_NOGFX_EXCEPT() Window::NoGfxException(__LINE__, __FILE__)
 
 class Window
 {
@@ -61,6 +62,8 @@ public:
 	// INFO: Custom Window Exception Class for Error Handling
 	class Exception : public BaseException
 	{
+		using BaseException::BaseException;
+
 	private:
 		HRESULT hResult;
 
@@ -72,6 +75,24 @@ public:
 		inline virtual const char* GetType() const override { return "Window Exception"; }
 		inline HRESULT GetErrorCode() const { return hResult; }
 		inline std::string GetErrorDescription() const { return TranslateErrorCode(hResult); }
+	};
+
+	class HrException : public Exception
+	{
+	public:
+		HrException(int line, const char* file, HRESULT hr) noexcept;
+		const char* what() const noexcept override;
+		const char* GetType() const noexcept override;
+		HRESULT GetErrorCode() const noexcept;
+		std::string GetErrorDescription() const noexcept;
+	private:
+		HRESULT hr;
+	};
+	class NoGfxException : public Exception
+	{
+	public:
+		using Exception::Exception;
+		const char* GetType() const noexcept override;
 	};
 
 private:
@@ -94,7 +115,7 @@ public:
 
 	static std::optional<int> ProcessMessages();
 
-	inline Renderer& GetRenderer() { return *renderer; }
+	Renderer& GetRenderer();
 
 private:
 	/// @brief Handles the Setup of Message Handling for the Window
