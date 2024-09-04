@@ -1,10 +1,12 @@
 #include "Renderer.h"
 
 #include <sstream>
+#include <d3dcompiler.h>
 
 #include "../Dxerr/dxerr.h"
 
 #pragma comment(lib, "d3d11.lib")
+#pragma comment(lib, "D3DCompiler.lib")
 
 // INFO: Graphics exception checking/throwing macros (some with dxgi infos)
 #define GFX_EXCEPT_NOINFO(hr) Renderer::HrException( __LINE__,__FILE__,(hr) )
@@ -14,10 +16,12 @@
 #define GFX_EXCEPT(hr) Renderer::HrException( __LINE__,__FILE__,(hr),infoManager.GetMessages() )
 #define GFX_THROW_INFO(hrcall) infoManager.Set(); if( FAILED( hr = (hrcall) ) ) throw GFX_EXCEPT(hr)
 #define GFX_DEVICE_REMOVED_EXCEPT(hr) Renderer::DeviceRemovedException( __LINE__,__FILE__,(hr),infoManager.GetMessages() )
+#define GFX_THROW_INFO_ONLY(call) infoManager.Set(); (call); {auto v = infoManager.GetMessages(); if(!v.empty()) {throw Renderer::InfoException( __LINE__,__FILE__,v);}}
 #else
 #define GFX_EXCEPT(hr) Renderer::HrException( __LINE__,__FILE__,(hr) )
 #define GFX_THROW_INFO(hrcall) GFX_THROW_NOINFO(hrcall)
 #define GFX_DEVICE_REMOVED_EXCEPT(hr) Renderer::DeviceRemovedException( __LINE__,__FILE__,(hr) )
+#define GFX_THROW_INFO_ONLY(call) (call)
 #endif
 
 #pragma region Renderer
@@ -71,9 +75,6 @@ Renderer::Renderer(HWND hWnd) : device(nullptr), deviceContext(nullptr), swapCha
 
 	// INFO: Create Render Target View
 	GFX_THROW_INFO(device->CreateRenderTargetView(backBuffer.Get(), nullptr, &renderTargetView));
-
-	// INFO: Release the Back Buffer
-	backBuffer->Release();
 }
 
 void Renderer::EndFrame()
@@ -99,6 +100,55 @@ void Renderer::ClearBuffer(float red, float green, float blue)
 {
 	const float colour[] = { red, green, blue, 1.0f };
 	deviceContext->ClearRenderTargetView(renderTargetView.Get(), colour);
+}
+
+void Renderer::DrawTestTriangle()
+{
+	Microsoft::WRL::ComPtr<ID3D11Buffer> vertexBuffer;
+
+	HRESULT hr;
+
+	struct Vertex
+	{
+		float x;
+		float y;
+	};
+
+	const Vertex vertices[] =
+	{
+		{ 0.0f, 0.5f },
+		{ 0.5f, -0.5f },
+		{ -0.5f, -0.5f }
+	};
+
+	D3D11_BUFFER_DESC bufferDesc = {};
+	bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	bufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	bufferDesc.CPUAccessFlags = 0u;
+	bufferDesc.MiscFlags = 0u;
+	bufferDesc.ByteWidth = sizeof(vertices);
+	bufferDesc.StructureByteStride = sizeof(Vertex);
+
+	D3D11_SUBRESOURCE_DATA subresourceData = {};
+	subresourceData.pSysMem = vertices;
+
+	GFX_THROW_INFO(device->CreateBuffer(&bufferDesc, &subresourceData, &vertexBuffer));
+
+	const UINT stride = sizeof(Vertex);
+	const UINT offset = 0u;
+
+	deviceContext->IASetVertexBuffers(0u, 1u, vertexBuffer.GetAddressOf(), &stride, &offset);
+
+	// INFO: Create Vertex Shader
+	Microsoft::WRL::ComPtr<ID3D11VertexShader> vertexShader;
+	Microsoft::WRL::ComPtr<ID3DBlob> vertexBlob;
+	GFX_THROW_INFO(D3DReadFileToBlob(L"VertexShader.cso", &vertexBlob));
+	GFX_THROW_INFO(device->CreateVertexShader(vertexBlob->GetBufferPointer(), vertexBlob->GetBufferSize(), nullptr, &vertexShader));
+	
+	// INFO: Bind Vertex Shader
+	deviceContext->VSSetShader(vertexShader.Get(), nullptr, 0u);
+
+	GFX_THROW_INFO_ONLY(deviceContext->Draw(std::size(vertices), 0u));
 }
 #pragma endregion
 
@@ -166,5 +216,43 @@ std::string Renderer::HrException::GetErrorInfo() const
 const char* Renderer::DeviceRemovedException::GetType() const
 {
 	return "Renderer Exception [Device Removed] (DXGI_ERROR_DEVICE_REMOVED)";
+}
+#pragma endregion
+
+#pragma region Renderer Info Exception
+Renderer::InfoException::InfoException(int line, const char* file, std::vector<std::string> infoMsgs) noexcept
+	: Exception(line, file)
+{
+	// join all info messages with newlines into single string
+	for (const auto& m : infoMsgs)
+	{
+		info += m;
+		info.push_back('\n');
+	}
+	// remove final newline if exists
+	if (!info.empty())
+	{
+		info.pop_back();
+	}
+}
+
+const char* Renderer::InfoException::what() const noexcept
+{
+	std::ostringstream oss;
+	oss << GetType() << std::endl
+		<< "\n[Error Info]\n" << GetErrorInfo() << std::endl << std::endl;
+	oss << GetOriginContext();
+	whatBuffer = oss.str();
+	return whatBuffer.c_str();
+}
+
+const char* Renderer::InfoException::GetType() const noexcept
+{
+	return "Graphics Info Exception";
+}
+
+std::string Renderer::InfoException::GetErrorInfo() const noexcept
+{
+	return info;
 }
 #pragma endregion
