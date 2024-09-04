@@ -2,6 +2,7 @@
 
 #include <d3d11.h>
 #include <vector>
+#include <wrl.h>
 
 #include "../Generics/MinimalWindows.h"
 #include "../Base Classes/Exceptions/BaseException.h"
@@ -47,7 +48,7 @@ public:
 
 public:
 	Renderer(HWND hWnd);
-	~Renderer();
+	~Renderer() = default;
 
 	void EndFrame();
 	void ClearBuffer(float red, float green, float blue);
@@ -56,9 +57,9 @@ private:
 #ifndef NDEBUG
 	DxgiInfoManager infoManager;
 #endif
-	ID3D11Device* device;
-	ID3D11DeviceContext* deviceContext;
-	IDXGISwapChain* swapChain;
-	ID3D11RenderTargetView* renderTargetView;
+	Microsoft::WRL::ComPtr<ID3D11Device> device;
+	Microsoft::WRL::ComPtr<ID3D11DeviceContext> deviceContext;
+	Microsoft::WRL::ComPtr<IDXGISwapChain> swapChain;
+	Microsoft::WRL::ComPtr<ID3D11RenderTargetView> renderTargetView;
 };
 

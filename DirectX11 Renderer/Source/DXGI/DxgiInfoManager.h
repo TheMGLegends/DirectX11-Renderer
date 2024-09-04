@@ -2,6 +2,8 @@
 
 #include <vector>
 #include <string>
+#include <wrl.h>
+#include <dxgidebug.h>
 
 #include "../Generics/MinimalWindows.h"
 
@@ -9,13 +11,13 @@ class DxgiInfoManager
 {
 public:
 	DxgiInfoManager();
-	~DxgiInfoManager();
+	~DxgiInfoManager() = default;
 
 	void Set();
 	std::vector<std::string> GetMessages() const;
 
 private:
 	unsigned long long next;
-	struct IDXGIInfoQueue* dxgiInfoQueue;
+	Microsoft::WRL::ComPtr<IDXGIInfoQueue> dxgiInfoQueue;
 };
 

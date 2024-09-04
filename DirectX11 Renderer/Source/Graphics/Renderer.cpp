@@ -66,29 +66,14 @@ Renderer::Renderer(HWND hWnd) : device(nullptr), deviceContext(nullptr), swapCha
 	));
 
 	// INFO: Get the Back Buffer
-	ID3D11Resource* backBuffer = nullptr;
-	GFX_THROW_INFO(swapChain->GetBuffer(0, __uuidof(ID3D11Resource), reinterpret_cast<void**>(&backBuffer)));
+	Microsoft::WRL::ComPtr<ID3D11Resource> backBuffer = nullptr;
+	GFX_THROW_INFO(swapChain->GetBuffer(0, __uuidof(ID3D11Resource), &backBuffer));
 
 	// INFO: Create Render Target View
-	GFX_THROW_INFO(device->CreateRenderTargetView(backBuffer, nullptr, &renderTargetView));
+	GFX_THROW_INFO(device->CreateRenderTargetView(backBuffer.Get(), nullptr, &renderTargetView));
 
 	// INFO: Release the Back Buffer
 	backBuffer->Release();
-}
-
-Renderer::~Renderer()
-{
-	if (renderTargetView != nullptr)
-		renderTargetView->Release();
-
-	if (swapChain != nullptr)
-		swapChain->Release();
-
-	if (deviceContext != nullptr)
-		deviceContext->Release();
-
-	if (device != nullptr)
-		device->Release();
 }
 
 void Renderer::EndFrame()
@@ -113,7 +98,7 @@ void Renderer::EndFrame()
 void Renderer::ClearBuffer(float red, float green, float blue)
 {
 	const float colour[] = { red, green, blue, 1.0f };
-	deviceContext->ClearRenderTargetView(renderTargetView, colour);
+	deviceContext->ClearRenderTargetView(renderTargetView.Get(), colour);
 }
 #pragma endregion
 
