@@ -139,14 +139,53 @@ void Renderer::DrawTestTriangle()
 
 	deviceContext->IASetVertexBuffers(0u, 1u, vertexBuffer.GetAddressOf(), &stride, &offset);
 
+	Microsoft::WRL::ComPtr<ID3DBlob> shaderBlob;
+
+	// INFO: Create Pixel Shader
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> pixelShader;
+	GFX_THROW_INFO(D3DReadFileToBlob(L"PixelShader.cso", &shaderBlob));
+	GFX_THROW_INFO(device->CreatePixelShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), nullptr, &pixelShader));
+
+	// INFO: Bind Pixel Shader
+	deviceContext->PSSetShader(pixelShader.Get(), nullptr, 0u);
+	
 	// INFO: Create Vertex Shader
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> vertexShader;
-	Microsoft::WRL::ComPtr<ID3DBlob> vertexBlob;
-	GFX_THROW_INFO(D3DReadFileToBlob(L"VertexShader.cso", &vertexBlob));
-	GFX_THROW_INFO(device->CreateVertexShader(vertexBlob->GetBufferPointer(), vertexBlob->GetBufferSize(), nullptr, &vertexShader));
+	GFX_THROW_INFO(D3DReadFileToBlob(L"VertexShader.cso", &shaderBlob));
+	GFX_THROW_INFO(device->CreateVertexShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), nullptr, &vertexShader));
 	
 	// INFO: Bind Vertex Shader
 	deviceContext->VSSetShader(vertexShader.Get(), nullptr, 0u);
+
+	// INFO: Create Input Layout
+	Microsoft::WRL::ComPtr<ID3D11InputLayout> inputLayout;
+
+	const D3D11_INPUT_ELEMENT_DESC ied[] =
+	{
+		{ "Position", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+	};
+
+	GFX_THROW_INFO(device->CreateInputLayout(ied, (UINT)std::size(ied), shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), &inputLayout));
+
+	// INFO: Bind Input Layout
+	deviceContext->IASetInputLayout(inputLayout.Get());
+
+	// INFO: Bind Render Target
+	deviceContext->OMSetRenderTargets(1u, renderTargetView.GetAddressOf(), nullptr);
+
+	// INFO: Set Primitive Topology (Triangle List)
+	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	// INFO: Setup Viewport
+	D3D11_VIEWPORT viewport = {};
+	viewport.Width = 800;
+	viewport.Height = 600;
+	viewport.MinDepth = 0.0f;
+	viewport.MaxDepth = 1.0f;
+	viewport.TopLeftX = 0;
+	viewport.TopLeftY = 0;
+
+	deviceContext->RSSetViewports(1u, &viewport);
 
 	GFX_THROW_INFO_ONLY(deviceContext->Draw(std::size(vertices), 0u));
 }
