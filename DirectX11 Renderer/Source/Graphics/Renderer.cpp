@@ -110,16 +110,63 @@ void Renderer::DrawTestTriangle()
 
 	struct Vertex
 	{
-		float x;
-		float y;
+		struct 
+		{
+			float x;
+			float y;
+		} position;
+
+		struct
+		{
+			unsigned char r;
+			unsigned char g;
+			unsigned char b;
+			unsigned char a;
+		} color;
 	};
 
-	const Vertex vertices[] =
+	Vertex vertices[] =
 	{
-		{ 0.0f, 0.5f },
-		{ 0.5f, -0.5f },
-		{ -0.5f, -0.5f }
+		// INFO: Isosceles Triangle
+		//{ 0.0f, 0.5f, 255, 0, 0, 0 },
+		//{ 0.5f, -0.5f, 0, 255, 0, 0 },
+		//{ -0.5f, -0.5f, 0, 0, 255, 0 }
+
+		// INFO: Line List Triangle
+		//{0.0f, 0.5f},
+		//{0.5f, -0.5f},
+		//
+		//{0.5f, -0.5f},
+		//{-0.5f, -0.5f},
+		//
+		//{-0.5f, -0.5f},
+		//{0.0f, 0.5f}
+
+		// INFO: Line Strip Triangle
+		//{ 0.0f, 0.5f },
+		//{ 0.5f, -0.5f },
+		//{ -0.5f, -0.5f },
+		//{ 0.0f, 0.5f }
+
+		// INFO: Rectangle
+		//{ -0.5f, 0.5f},
+		//{ 0.5f, 0.5f},
+		//{ 0.5f, -0.5f},
+		//
+		//{ 0.5f, -0.5f},
+		//{ -0.5f, -0.5f},
+		//{ -0.5f, 0.5f}
+
+		// INFO: Hexagon
+		{ 0.0f, 0.5f, 255, 0, 0, 0 },
+		{ 0.5f, -0.5f, 0, 255, 0, 0 },
+		{ -0.5f, -0.5f, 0, 0, 255, 0 },
+		{ -0.3f, 0.3f, 0, 0, 255, 0 },
+		{ 0.3f, 0.3f, 0, 255, 0, 0 },
+		{ 0.0f, -1.8f, 255, 0, 0, 0 }
 	};
+
+	vertices[0].color.g = 255;
 
 	D3D11_BUFFER_DESC bufferDesc = {};
 	bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
@@ -138,6 +185,33 @@ void Renderer::DrawTestTriangle()
 	const UINT offset = 0u;
 
 	deviceContext->IASetVertexBuffers(0u, 1u, vertexBuffer.GetAddressOf(), &stride, &offset);
+
+	// INFO: Create Index Buffer
+	const unsigned short indices[] =
+	{
+		0, 1, 2,
+		0, 2, 3,
+		0, 4, 1,
+		2, 1, 5
+	};
+
+	Microsoft::WRL::ComPtr<ID3D11Buffer> indexBuffer;
+
+	D3D11_BUFFER_DESC ibd = {};
+	ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	ibd.Usage = D3D11_USAGE_DEFAULT;
+	ibd.CPUAccessFlags = 0u;
+	ibd.MiscFlags = 0u;
+	ibd.ByteWidth = sizeof(indices);
+	ibd.StructureByteStride = sizeof(unsigned short);
+
+	D3D11_SUBRESOURCE_DATA isd = {};
+	isd.pSysMem = indices;
+
+	GFX_THROW_INFO(device->CreateBuffer(&ibd, &isd, &indexBuffer));
+
+	// INFO: Bind Index Buffer
+	deviceContext->IASetIndexBuffer(indexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0u);
 
 	Microsoft::WRL::ComPtr<ID3DBlob> shaderBlob;
 
@@ -162,7 +236,8 @@ void Renderer::DrawTestTriangle()
 
 	const D3D11_INPUT_ELEMENT_DESC ied[] =
 	{
-		{ "Position", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+		{ "Position", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "Color", 0, DXGI_FORMAT_R8G8B8A8_UNORM, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	};
 
 	GFX_THROW_INFO(device->CreateInputLayout(ied, (UINT)std::size(ied), shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), &inputLayout));
@@ -178,16 +253,16 @@ void Renderer::DrawTestTriangle()
 
 	// INFO: Setup Viewport
 	D3D11_VIEWPORT viewport = {};
-	viewport.Width = 800;
-	viewport.Height = 600;
+	viewport.Width = 400;
+	viewport.Height = 300;
 	viewport.MinDepth = 0.0f;
 	viewport.MaxDepth = 1.0f;
-	viewport.TopLeftX = 0;
-	viewport.TopLeftY = 0;
+	viewport.TopLeftX = 100;
+	viewport.TopLeftY = 100;
 
 	deviceContext->RSSetViewports(1u, &viewport);
 
-	GFX_THROW_INFO_ONLY(deviceContext->Draw(std::size(vertices), 0u));
+	GFX_THROW_INFO_ONLY(deviceContext->DrawIndexed(std::size(indices), 0u, 0u));
 }
 #pragma endregion
 
