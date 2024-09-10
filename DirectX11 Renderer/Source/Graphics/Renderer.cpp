@@ -2,6 +2,7 @@
 
 #include <sstream>
 #include <d3dcompiler.h>
+#include <DirectXMath.h>
 
 #include "../Dxerr/dxerr.h"
 
@@ -102,7 +103,7 @@ void Renderer::ClearBuffer(float red, float green, float blue)
 	deviceContext->ClearRenderTargetView(renderTargetView.Get(), colour);
 }
 
-void Renderer::DrawTestTriangle(float angle)
+void Renderer::DrawTestTriangle(float angle, float x, float y)
 {
 	Microsoft::WRL::ComPtr<ID3D11Buffer> vertexBuffer;
 
@@ -216,19 +217,17 @@ void Renderer::DrawTestTriangle(float angle)
 	// INFO: Create Constant Buffer for Transformation Matrix
 	struct ConstantBuffer 
 	{
-		struct
-		{
-			float element[4][4];
-		} transformation;
+		DirectX::XMMATRIX transform;
 	};
 
 	const ConstantBuffer cb =
 	{
 		{
-			(3.0f / 4.0f) * std::cos(angle), std::sin(angle), 0.0f, 0.0f,
-			(3.0f / 4.0f) * -std::sin(angle), std::cos(angle), 0.0f, 0.0f,
-			0.0f, 0.0f, 1.0f, 0.0f,
-			0.0f, 0.0f, 0.0f, 1.0f
+			DirectX::XMMatrixTranspose(
+			DirectX::XMMatrixRotationZ(angle) *
+			DirectX::XMMatrixScaling(3.0f / 4.0f, 1.0f, 1.0f) *
+			DirectX::XMMatrixTranslation(x, y, 0.0f)
+			)
 		}
 	};
 
