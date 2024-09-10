@@ -102,7 +102,7 @@ void Renderer::ClearBuffer(float red, float green, float blue)
 	deviceContext->ClearRenderTargetView(renderTargetView.Get(), colour);
 }
 
-void Renderer::DrawTestTriangle()
+void Renderer::DrawTestTriangle(float angle)
 {
 	Microsoft::WRL::ComPtr<ID3D11Buffer> vertexBuffer;
 
@@ -163,7 +163,7 @@ void Renderer::DrawTestTriangle()
 		{ -0.5f, -0.5f, 0, 0, 255, 0 },
 		{ -0.3f, 0.3f, 0, 0, 255, 0 },
 		{ 0.3f, 0.3f, 0, 255, 0, 0 },
-		{ 0.0f, -1.8f, 255, 0, 0, 0 }
+		{ 0.0f, -0.8f, 255, 0, 0, 0 }
 	};
 
 	vertices[0].color.g = 255;
@@ -213,6 +213,41 @@ void Renderer::DrawTestTriangle()
 	// INFO: Bind Index Buffer
 	deviceContext->IASetIndexBuffer(indexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0u);
 
+	// INFO: Create Constant Buffer for Transformation Matrix
+	struct ConstantBuffer 
+	{
+		struct
+		{
+			float element[4][4];
+		} transformation;
+	};
+
+	const ConstantBuffer cb =
+	{
+		{
+			(3.0f / 4.0f) * std::cos(angle), std::sin(angle), 0.0f, 0.0f,
+			(3.0f / 4.0f) * -std::sin(angle), std::cos(angle), 0.0f, 0.0f,
+			0.0f, 0.0f, 1.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 1.0f
+		}
+	};
+
+	Microsoft::WRL::ComPtr<ID3D11Buffer> constantBuffer;
+	D3D11_BUFFER_DESC constantBufferDesc = {};
+	constantBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	constantBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	constantBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	constantBufferDesc.MiscFlags = 0u;
+	constantBufferDesc.ByteWidth = sizeof(cb);
+	constantBufferDesc.StructureByteStride = 0u;
+	D3D11_SUBRESOURCE_DATA constantBufferData = {};
+	constantBufferData.pSysMem = &cb;
+
+	GFX_THROW_INFO(device->CreateBuffer(&constantBufferDesc, &constantBufferData, &constantBuffer));
+
+	// INFO: Bind Constant Buffer to Vertex Shader
+	deviceContext->VSSetConstantBuffers(0u, 1u, constantBuffer.GetAddressOf());
+
 	Microsoft::WRL::ComPtr<ID3DBlob> shaderBlob;
 
 	// INFO: Create Pixel Shader
@@ -253,12 +288,12 @@ void Renderer::DrawTestTriangle()
 
 	// INFO: Setup Viewport
 	D3D11_VIEWPORT viewport = {};
-	viewport.Width = 400;
-	viewport.Height = 300;
+	viewport.Width = 800;
+	viewport.Height = 600;
 	viewport.MinDepth = 0.0f;
 	viewport.MaxDepth = 1.0f;
-	viewport.TopLeftX = 100;
-	viewport.TopLeftY = 100;
+	viewport.TopLeftX = 0;
+	viewport.TopLeftY = 0;
 
 	deviceContext->RSSetViewports(1u, &viewport);
 
