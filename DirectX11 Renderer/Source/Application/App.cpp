@@ -25,6 +25,7 @@ void App::CustomUpdate()
 	const float s = sin(TimeHandler::GetElapsedTime()) / 2.0f + 0.5f;
 	const float c = cos(TimeHandler::GetElapsedTime()) / 2.0f + 0.5f;
 	window.GetRenderer().ClearBuffer(s, c, 1.0f);
+	window.GetRenderer().DrawTestTriangle(TimeHandler::GetElapsedTime() - 1.0f, 0.0f, 0.0f);
 	window.GetRenderer().DrawTestTriangle(TimeHandler::GetElapsedTime(), window.mouse.GetXPosition() / 400.0f - 1.0f, -window.mouse.GetYPosition() / 300.0f + 1.0f);
 	window.GetRenderer().EndFrame();
 }
