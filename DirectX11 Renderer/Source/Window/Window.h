@@ -4,6 +4,7 @@
 #include "../Keyboard/Keyboard.h"
 #include "../Mouse/Mouse.h"
 #include "../Graphics/Renderer.h"
+#include "../Macros/WindowThrowMacros.h"
 
 #include "../Generics/MinimalWindows.h"
 
@@ -12,11 +13,6 @@
 
 // INFO: Custom Window Class Macros for Window Positioning
 constexpr auto CW_USECENTRE = ((int)0x80000001);
-
-// INFO: Custom Error Exception Macros for Window Class
-#define WINDOW_THROW_EXCEPTION(hr) Window::Exception(__LINE__, __FILE__, hr)
-#define WINDOW_THROW_LAST_EXCEPTION() Window::Exception(__LINE__, __FILE__, GetLastError())
-#define WINDOW_NOGFX_EXCEPT() Window::NoGfxException(__LINE__, __FILE__)
 
 class Window
 {

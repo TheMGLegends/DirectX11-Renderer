@@ -3,6 +3,8 @@
 #include <d3d11.h>
 #include <vector>
 #include <wrl.h>
+#include <d3dcompiler.h>
+#include <DirectXMath.h>
 
 #include "../Generics/MinimalWindows.h"
 #include "../Base Classes/Exceptions/BaseException.h"
@@ -10,6 +12,8 @@
 
 class Renderer
 {
+	friend class BaseBindable;
+
 public:
 	// INFO: Custom Renderer Exception Classes for Error Handling
 	class Exception : public BaseException

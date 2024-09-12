@@ -137,6 +137,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Source\Bindables\PixelShader.cpp" />
+    <ClCompile Include="Source\Bindables\InputLayout.cpp" />
+    <ClCompile Include="Source\Bindables\IndexBuffer.cpp" />
+    <ClCompile Include="Source\Bindables\BaseBindable.cpp" />
     <ClCompile Include="Source\Dxerr\dxerr.cpp" />
     <ClCompile Include="Source\DXGI\DxgiInfoManager.cpp" />
     <ClCompile Include="Source\Graphics\Renderer.cpp" />
@@ -150,12 +154,20 @@
     </ClCompile>
     <ClCompile Include="Source\Window\Window.cpp" />
     <ClCompile Include="Source\Time\TimeHandler.cpp" />
+    <ClCompile Include="Source\Bindables\Topology.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Source\Bindables\PixelShader.h" />
+    <ClInclude Include="Source\Bindables\InputLayout.h" />
+    <ClInclude Include="Source\Bindables\IndexBuffer.h" />
+    <ClInclude Include="Source\Bindables\ConstantBuffers.h" />
+    <ClInclude Include="Source\Bindables\BaseBindable.h" />
     <ClInclude Include="Source\Dxerr\dxerr.h" />
     <ClInclude Include="Source\DXGI\DxgiInfoManager.h" />
     <ClInclude Include="Source\Graphics\Renderer.h" />
     <ClInclude Include="Source\Application\App.h" />
+    <ClInclude Include="Source\Macros\RendererThrowMacros.h" />
+    <ClInclude Include="Source\Macros\WindowThrowMacros.h" />
     <ClInclude Include="Source\Mouse\Mouse.h" />
     <ClInclude Include="Source\Keyboard\Keyboard.h" />
     <ClInclude Include="Resources\resource.h" />
@@ -163,6 +175,7 @@
     <ClInclude Include="Source\Generics\MinimalWindows.h" />
     <ClInclude Include="Source\Window\Window.h" />
     <ClInclude Include="Source\Time\TimeHandler.h" />
+    <ClInclude Include="Source\Bindables\Topology.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resources\DirectX11 Renderer.rc" />
